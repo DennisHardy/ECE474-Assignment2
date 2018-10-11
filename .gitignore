@@ -1,2 +1,4 @@
 # Never include the build folder
 build/
+.vscode/
+*.DS_Store
