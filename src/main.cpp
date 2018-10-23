@@ -19,9 +19,16 @@ Valid data types include:
 *******************************************************************************/
 
 #include <iostream>
+#include <sstream>
 #include <fstream>
 #include <string>
+#include <vector>
+#include "wire.h"
+#include "io.h"
+#include "dp.h"
+
 using namespace std; 
+
 
 int main(int argc, char *argv[]){
    //Alert user if invalid usage
@@ -46,14 +53,50 @@ int main(int argc, char *argv[]){
       return -1;
    }
    
-   while(!netlistFile.eof()){
-      if(getline(netlistFile, line)){
+   Wires wires; 
+   Datapath datapath;
+   int currentLine = 0;
+   bool error = false;
+
+   while(!netlistFile.eof()){ 
+      if(getline(netlistFile, line) && !error){ //Build data structures while parsing input file
+         currentLine ++;
+         vector<string> words = splitLine(line);
+         if(words.size() < 3){ //Blank Line
+            //cout << "blank line" <<endl;
+         }
+         else if(words.at(0).compare(0, 2, "//") == 0){ //Comment Line
+            //cout << "comment line" <<endl;
+         }
+         else if(words.size()>2 && (words.at(0).compare("input")==0 || words.at(0).compare("output")==0 || 
+                                    words.at(0).compare("wire")==0 || words.at(0).compare("register")==0)){ //Line Defining Inputs
+            //cout << "declaration line" <<endl;
+            error = !wires.addByLine(words, currentLine);
+         }
+         else if(words.at(1).compare("=")==0){ //operation line
+            //cout << "op line: ";
+            error = !datapath.addByLine(words, &wires, currentLine);
+         }
          verilogFile << line << endl;
       }
    }
-
    netlistFile.close();
-   verilogFile.close();
-   
-   return 0;
+
+   if(!error){
+      cout <<endl;
+      for(int i = 0; i< wires.size(); i++){ //Debugging Print all inputs, outputs, wires, registres
+         cout << wires.at(i)->getTypeS()<<": "<<wires.at(i)->getName() << ": " << wires.at(i)->getSign() << wires.at(i)->getWidth() << endl;
+      }
+      for(int i = 0; i< datapath.size(); i++){ //Debugging print all data path components
+         cout << datapath.at(i)->getOpS()<< datapath.at(i)->getWidth() << endl;
+      }
+      
+      verilogFile.close();
+      
+      return 0;
+   }
+   else{
+      verilogFile.close();
+      return -1;
+   }
 }
