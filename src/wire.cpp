@@ -66,7 +66,7 @@ int typeToWidth(string dataType){
 bool Wires::add(wire* addMe){//returns success=true, fail=false
    for(int i=0; i<wires.size(); i++){ //loop through existing 'wires' and checks if already declared
       if (wires.at(i)->getName().compare(addMe->getName())==0){
-         cout << "Error: Redeclaration of Wire, Input, Output, or Register" << endl;
+         cout << "Error: Redeclaration of Wire, Input, Output, or Register:" << addMe->getName() <<endl;
          return false;
       }
    }

@@ -82,7 +82,7 @@ int main(int argc, char *argv[]){
    }
    netlistFile.close();
 
-   if(!error){
+   if(1){
       cout <<endl;
       for(int i = 0; i< wires.size(); i++){ //Debugging Print all inputs, outputs, wires, registres
          cout << wires.at(i)->getTypeS()<<": "<<wires.at(i)->getName() << ": " << wires.at(i)->getSign() << wires.at(i)->getWidth() << endl;
