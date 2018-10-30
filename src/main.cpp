@@ -30,28 +30,28 @@ Valid data types include:
 using namespace std; 
 
 
-int main(int argc, char *argv[]){
+int main(){
    //Alert user if invalid usage
-   if(argc != 3){
-      cout << "Input and/or output files not specified" << endl;
-      cout << "usage: dpgen netlistFile verilogFile" <<endl;
-      return -1;
-   }
-
    ifstream netlistFile;
-   ofstream verilogFile;
-   string line;
-   verilogFile.open(argv[2]);
-   netlistFile.open(argv[1]);
+	ofstream verilogFile;
+	string infilename, outfilename,line;
+	while (1)
+	{
+		cout << "Please enter the input file name> " << flush;
+		getline(cin, infilename);
+		netlistFile.open(infilename);
 
-   if(!verilogFile.is_open()){
-      cout << "Could not open " << argv[2] << endl;
-      return -1;
-   }
-   if(!netlistFile.is_open()){
-      cout << "Could not open " << argv[1] << endl;
-      return -1;
-   }
+		cout << "Please enter the output file name> " << flush;
+		getline(cin, outfilename);
+		verilogFile.open(outfilename);
+		if (!netlistFile.is_open())
+			cout << "Could not Open netlistFile " << infilename << "\n";
+		else if(!verilogFile.is_open())
+			cout << "Could not Open verilogFile " << infilename << "\n";
+		else
+			break;
+	}
+   
    
    Wires wires; 
    Datapath datapath;
