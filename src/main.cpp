@@ -77,22 +77,16 @@ int main(int argc, char *argv[]){
             //cout << "op line: ";
             error = !datapath.addByLine(words, &wires, currentLine);
          }
-         verilogFile << line << endl;
+         verilogFile << "//" <<line << endl;
       }
    }
+   verilogFile << endl;
    netlistFile.close();
    if(1){
       cout << endl;
       for(int i = 0; i< wires.size(); i++){ //Debugging Print all inputs, outputs, wires, registres
          //cout << wires.at(i)->getTypeS()<<": "<<wires.at(i)->getName() << ": " << wires.at(i)->getSign() << wires.at(i)->getWidth() << endl;
-         cout << wires.at(i)->getTypeS();
-         if(wires.at(i)->getTypeS()[0] == 'o'){
-             cout << " reg";
-         }
-         if(wires.at(i)->getSign() == 's'){
-         cout << " signed";
-         }
-         cout <<" ["<<wires.at(i)->getWidth()-1<<":0] "<<wires.at(i)->getName()<<endl;
+         verilogFile << wires.at(i)->printToFile();
       }
       for(int i = 0; i< datapath.size(); i++){ //Debugging print all data path components
          cout << datapath.at(i)->getOpS()<< datapath.at(i)->getWidth() << endl;

@@ -4,6 +4,7 @@
 
 #include <string>
 #include <vector>
+#include <sstream>
 using namespace std;
 enum type {INPUT, OUTPUT, WIRE, REGISTER, ERROR=-1};
 
@@ -21,6 +22,7 @@ class wire //this class implements not only wires, but also inputs, outputs, and
       char getSign();
       type getType();
       string getTypeS();
+      string printToFile();
 };
  
 class Wires

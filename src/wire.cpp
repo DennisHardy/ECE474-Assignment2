@@ -38,6 +38,19 @@ string wire::getTypeS(){
       default: return "error:";
    }
 }
+string wire::printToFile(){
+   stringstream out;
+   out << this->getTypeS();
+   if(this->getType() == OUTPUT){
+      out << " reg";
+   }
+   if(this->getSign() == 's'){
+      out << " signed";
+   }
+   out <<" [" << this->getWidth()-1 << ":0] " << this->getName() << ";" << endl;
+   return out.str();
+}
+
 
 int typeToWidth(string dataType){
    if(dataType.compare("Int1") == 0 || dataType.compare("UInt1") == 0 ){
