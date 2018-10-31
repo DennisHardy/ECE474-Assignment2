@@ -1,4 +1,4 @@
-/******************************************************************************
+    /******************************************************************************
 Assignment 2   ECE 474
 Team Members: Zachary Alvarez, Denniss Hardy, Zi Wang
 Description: using command line arguments to accept an input & output file,
@@ -30,28 +30,28 @@ Valid data types include:
 using namespace std; 
 
 
-int main(){
+int main(int argc, char *argv[]){
    //Alert user if invalid usage
-   ifstream netlistFile;
-	ofstream verilogFile;
-	string infilename, outfilename,line;
-	while (1)
-	{
-		cout << "Please enter the input file name> " << flush;
-		getline(cin, infilename);
-		netlistFile.open(infilename);
+   if(argc != 3){
+      cout << "Input and/or output files not specified" << endl;
+      cout << "usage: dpgen netlistFile verilogFile" <<endl;
+      return -1;
+   }
 
-		cout << "Please enter the output file name> " << flush;
-		getline(cin, outfilename);
-		verilogFile.open(outfilename);
-		if (!netlistFile.is_open())
-			cout << "Could not Open netlistFile " << infilename << "\n";
-		else if(!verilogFile.is_open())
-			cout << "Could not Open verilogFile " << infilename << "\n";
-		else
-			break;
-	}
-   
+   ifstream netlistFile;
+   ofstream verilogFile;
+   string line;
+   verilogFile.open(argv[2]);
+   netlistFile.open(argv[1]);
+
+   if(!verilogFile.is_open()){
+      cout << "Could not open " << argv[2] << endl;
+      return -1;
+   }
+   if(!netlistFile.is_open()){
+      cout << "Could not open " << argv[1] << endl;
+      return -1;
+   }
    
    Wires wires; 
    Datapath datapath;
@@ -81,11 +81,18 @@ int main(){
       }
    }
    netlistFile.close();
-
    if(1){
-      cout <<endl;
+      cout << endl;
       for(int i = 0; i< wires.size(); i++){ //Debugging Print all inputs, outputs, wires, registres
-         cout << wires.at(i)->getTypeS()<<": "<<wires.at(i)->getName() << ": " << wires.at(i)->getSign() << wires.at(i)->getWidth() << endl;
+         //cout << wires.at(i)->getTypeS()<<": "<<wires.at(i)->getName() << ": " << wires.at(i)->getSign() << wires.at(i)->getWidth() << endl;
+         cout << wires.at(i)->getTypeS();
+         if(wires.at(i)->getTypeS()[0] == 'o'){
+             cout << " reg";
+         }
+         if(wires.at(i)->getSign() == 's'){
+         cout << " signed";
+         }
+         cout <<" ["<<wires.at(i)->getWidth()-1<<":0] "<<wires.at(i)->getName()<<endl;
       }
       for(int i = 0; i< datapath.size(); i++){ //Debugging print all data path components
          cout << datapath.at(i)->getOpS()<< datapath.at(i)->getWidth() << endl;
