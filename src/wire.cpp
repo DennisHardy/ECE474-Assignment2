@@ -11,7 +11,12 @@ wire::wire(string name, int width, bool sign, type myType){
    this->sign = sign;
    this->myType = myType;
 }
-
+wire::wire(){
+   this->name = "";
+   this->width = 0;
+   this->sign = false;
+   this->myType = WIRE;
+}
 string wire::getName(){
    return this->name;
 }
@@ -69,7 +74,7 @@ int typeToWidth(string dataType){
       return 32;
    }
    else if(dataType.compare("Int64") == 0 || dataType.compare("UInt64") == 0 ){
-      return 32;
+      return 64;
    }
    else{
       return -1;
@@ -116,6 +121,8 @@ wire* Wires::at(int i){
 }
 
 Wires::Wires(){
+   wire *aWire = new wire();
+   this->add(aWire);
    return;
 }
 

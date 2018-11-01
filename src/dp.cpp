@@ -32,11 +32,23 @@ bool Datapath::addByLine(vector<string> words, Wires* available, int currentLine
          outputs.push_back(words.at(0));
          inputs.push_back(words.at(2));
          break;
-
+      case COMP:
+         inputs.push_back(words.at(2));
+         inputs.push_back(words.at(4));
+         outputs.resize(3);
+         if(words.at(3).compare(">") == 0){
+            outputs.at(0) = words.at(0);
+         }
+         else if(words.at(3).compare("<") == 0){
+            outputs.at(1) = words.at(0);
+         }
+         else if(words.at(3).compare("==") == 0){
+            outputs.at(2) = words.at(0);
+         }
+         break;
       case ADD:
       case SUB:
       case MUL:
-      case COMP:
       case SHR:
       case SHL:
          outputs.push_back(words.at(0));
@@ -69,6 +81,14 @@ Component* Datapath::at(int i){
       return this->components.at(i);
 }
 bool Datapath::add(Component* addMe){
+      if(addMe->getOp() == COMP){
+         for(int i = 0; i < this->components.size(); i++){
+            if((this->components.at(i)->getInput(1).compare(addMe->getInput(1)) == 0) &&
+               (this->components.at(i)->getInput(2).compare(addMe->getInput(2)) == 0)){
+                  cout << "Two comparators with same inputs FIXME:combine";
+                }
+         }
+      }
       this->components.push_back(addMe);
       return true;
 }
@@ -165,16 +185,30 @@ string Component::getOpS(){
    }
 }
 
+string Component::getInput(int i){
+   if(i >= this->inputs.size() || i < 0){
+      return "error";
+   }
+   else{
+      return this->inputs.at(i)->getName();
+   }
+}
+
 string Component::print(){
    stringstream out;
    switch(this->op){
       case REG: 
          out << "REG";
          break;
+      case COMP:
+         out << this->getOpS();
+         out << " #(" << this->getWidth() << ") ";
+         out << this->getOpS() << this->getId() <<"(" << this->inputs.at(0)->getName() << ", " << this->inputs.at(1)->getName() << ", ";
+         out << this->outputs.at(0)->getName() << ", " << this->outputs.at(1)->getName() << ", " << this->outputs.at(2)->getName() << ");" << endl;
+         break;
       case ADD: 
       case SUB: 
       case MUL: 
-      case COMP:
       case SHR: 
       case SHL: 
          out << this->getOpS();
@@ -183,7 +217,7 @@ string Component::print(){
          out << this->outputs.at(0)->getName() << ");" << endl;
          break;
       case MUX: 
-         out << "MUX" << endl;
+         out << "MUX2x1" << endl;
          break;
       default:  
          out << "error" << endl;

@@ -17,6 +17,7 @@ class wire //this class implements not only wires, but also inputs, outputs, and
       type myType;
    public:
       wire(string name, int width, bool sign, type myType);
+      wire();
       string getName();
       int getWidth();
       char getSign();

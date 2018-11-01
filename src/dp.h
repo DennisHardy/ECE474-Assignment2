@@ -23,6 +23,7 @@ class Component
       string getOpS();
       int getWidth();
       int getId();
+      string getInput(int i);
       string print();
 };
 
