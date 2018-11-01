@@ -16,11 +16,14 @@ class Component
       vector<wire*> inputs;
       vector<wire*> outputs;
       int width;
+      int id;
    public:
-      Component(vector<string> inputs, vector<string> outputs, operation op, Wires* available, bool* error);
+      Component(vector<string> inputs, vector<string> outputs, operation op, Wires* available, int id, bool* error);
       operation getOp();
       string getOpS();
       int getWidth();
+      int getId();
+      string print();
 };
 
 class Datapath

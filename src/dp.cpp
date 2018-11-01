@@ -56,7 +56,7 @@ bool Datapath::addByLine(vector<string> words, Wires* available, int currentLine
          break;
    }
    if(!error){
-      Component *tempComponent = new Component(inputs, outputs, op, available, &error);
+      Component *tempComponent = new Component(inputs, outputs, op, available, this->components.size(), &error);
       this->add(tempComponent);
    }
    return !error;
@@ -73,7 +73,7 @@ bool Datapath::add(Component* addMe){
       return true;
 }
 
-Component::Component( vector<string> inputs, vector<string> outputs, operation op, Wires *available, bool* error){
+Component::Component( vector<string> inputs, vector<string> outputs, operation op, Wires *available, int id, bool* error){
    
    bool found;
    for(int i = 0; i<inputs.size(); i++){//check that inputs provided exist
@@ -122,7 +122,7 @@ Component::Component( vector<string> inputs, vector<string> outputs, operation o
       return;
    }
    this->op = op;
-
+   this->id = id;
    //determine width of datapath component
    this->width = 0;
    if(op == COMP){
@@ -148,6 +148,9 @@ operation Component::getOp(){
 int Component::getWidth(){
       return this->width;
 }
+int Component::getId(){
+      return this->id;
+}
 string Component::getOpS(){
    switch(this->op){
       case REG: return "REG";
@@ -161,6 +164,34 @@ string Component::getOpS(){
       default:  return "error";
    }
 }
+
+string Component::print(){
+   stringstream out;
+   switch(this->op){
+      case REG: 
+         out << "REG";
+         break;
+      case ADD: 
+      case SUB: 
+      case MUL: 
+      case COMP:
+      case SHR: 
+      case SHL: 
+         out << this->getOpS();
+         out << " #(" << this->getWidth() << ") ";
+         out << this->getOpS() << this->getId() <<"(" << this->inputs.at(0)->getName() << ", " << this->inputs.at(1)->getName() << ", ";
+         out << this->outputs.at(0)->getName() << ");" << endl;
+         break;
+      case MUX: 
+         out << "MUX" << endl;
+         break;
+      default:  
+         out << "error" << endl;
+         break;
+   }
+   return out.str();
+}
+
 operation parseOp(string in){
    if(in.compare("+") == 0){
       return ADD;

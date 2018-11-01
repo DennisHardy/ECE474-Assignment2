@@ -88,8 +88,10 @@ int main(int argc, char *argv[]){
          //cout << wires.at(i)->getTypeS()<<": "<<wires.at(i)->getName() << ": " << wires.at(i)->getSign() << wires.at(i)->getWidth() << endl;
          verilogFile << wires.at(i)->printToFile();
       }
+      verilogFile << endl;
       for(int i = 0; i< datapath.size(); i++){ //Debugging print all data path components
-         cout << datapath.at(i)->getOpS()<< datapath.at(i)->getWidth() << endl;
+         //cout << datapath.at(i)->getOpS()<< datapath.at(i)->getWidth() << endl;
+         verilogFile << datapath.at(i)->print();
       }
       
       verilogFile.close();
