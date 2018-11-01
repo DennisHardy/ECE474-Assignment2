@@ -86,7 +86,20 @@ bool Datapath::add(Component* addMe){
             if((this->components.at(i)->getInput(1).compare(addMe->getInput(1)) == 0) &&
                (this->components.at(i)->getInput(2).compare(addMe->getInput(2)) == 0)){
                   cout << "Two comparators with same inputs FIXME:combine";
-                }
+                  if((this->components.at(i)->getOutputS(0).compare("") == 0) &&
+                     (addMe->getOutputS(0).compare("") !=0)){
+                        this->components.at(i)->setOutput(0, addMe->getOutput(0));
+                     }
+                  if((this->components.at(i)->getOutputS(1).compare("") == 0) &&
+                     (addMe->getOutputS(1).compare("") !=0)){
+                        this->components.at(i)->setOutput(1, addMe->getOutput(1));
+                     }
+                  if((this->components.at(i)->getOutputS(2).compare("") == 0) &&
+                     (addMe->getOutputS(2).compare("") !=0)){
+                        this->components.at(i)->setOutput(2, addMe->getOutput(2));
+                     }
+                  return true;
+            }
          }
       }
       this->components.push_back(addMe);
@@ -193,7 +206,30 @@ string Component::getInput(int i){
       return this->inputs.at(i)->getName();
    }
 }
-
+string Component::getOutputS(int i){
+   if(i >= this->outputs.size() || i < 0){
+      return "error";
+   }
+   else{
+      return this->outputs.at(i)->getName();
+   }
+}
+wire* Component::getOutput(int i){
+   if(i >= this->outputs.size() || i < 0){
+      return nullptr;
+   }
+   else{
+      return this->outputs.at(i);
+   }
+}
+void Component::setOutput(int i, wire* out){
+   if(i >= this->outputs.size() || i < 0){
+      return;
+   }
+   else{
+      this->outputs.at(i) = out;
+   }
+}
 string Component::print(){
    stringstream out;
    switch(this->op){

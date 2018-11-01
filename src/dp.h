@@ -24,6 +24,9 @@ class Component
       int getWidth();
       int getId();
       string getInput(int i);
+      string getOutputS(int i);
+      wire* getOutput(int i);
+      void setOutput(int i, wire* output);
       string print();
 };
 

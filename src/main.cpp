@@ -84,7 +84,7 @@ int main(int argc, char *argv[]){
    netlistFile.close();
    if(1){
       cout << endl;
-      for(int i = 0; i< wires.size(); i++){ //Debugging Print all inputs, outputs, wires, registres
+      for(int i = 1; i< wires.size(); i++){ //Debugging Print all inputs, outputs, wires, registres //start at 1 because zero is the 'empty wire'
          //cout << wires.at(i)->getTypeS()<<": "<<wires.at(i)->getName() << ": " << wires.at(i)->getSign() << wires.at(i)->getWidth() << endl;
          verilogFile << wires.at(i)->printToFile();
       }
