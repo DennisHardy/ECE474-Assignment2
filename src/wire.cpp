@@ -1,158 +1,125 @@
-#include <stdio.h>
-#include "wire.h"
-#include <string>
+/******************************************************************************
+Assignment 2   ECE 474
+Team Members: Zachary Alvarez, Denniss Hardy, Zi Wang
+Description: using command line arguments to accept an input & output file,
+Program converts the given input file to Verilog and saves it in the output file
+All empty lines should be ignored
+● All lines beginning with "//" are considered comments and should be ignored
+● The netlist file can be assumed to be fully space/tab delimited, i.e. one or more space or tab characters
+should appear between each token that needs to be parsed, including colons.
+● Circuit inputs and outputs can be declared on a line using the formats:
+input dataType inputName1, inputName2
+output dataType outputName1, outputName2
+Valid data types include:
+○ Signed Integers Types: Int1, Int2, Int8, Int16, Int32, and Int64
+○ Unsigned Integer Types: UInt1, UInt2, UInt8, UInt16, UInt32, and UInt64
+○ The number after Int and UInt specifies the width of the data input, output, register
+*******************************************************************************/
+
 #include <iostream>
+#include <sstream>
+#include <fstream>
+#include <string>
+#include <vector>
+#include "wire.h"
+#include "io.h"
+#include "dp.h"
 
 using namespace std;
 
-wire::wire(string name, int width, bool sign, type myType){
-   this->name = name;
-   this->width = width;
-   this->sign = sign;
-   this->myType = myType;
-}
-wire::wire(){
-   this->name = "";
-   this->width = 0;
-   this->sign = false;
-   this->myType = WIRE;
-}
-string wire::getName(){
-   return this->name;
-}
-int wire::getWidth(){
-   return this->width;
-}
-char wire::getSign(){
-   if(this->sign){
-      return 's';
-   }
-   else{
-      return 'u';
-   }
-}
-type wire::getType(){
-   return myType;
-}
-string wire::getTypeS(){
-   switch (this->myType) {
-      case INPUT: return "input";
-      case OUTPUT: return "output";
-      case WIRE: return "wire";
-      case REGISTER: return "register";
-      default: return "error:";
-   }
-}
-string wire::printToFile(){
-   stringstream out;
-   out << this->getTypeS();
-   if(this->getType() == OUTPUT){
-      out << " reg";
-   }
-   if(this->getSign() == 's'){
-      out << " signed";
-   }
-   out <<" [" << this->getWidth()-1 << ":0] " << this->getName() << ";" << endl;
-   return out.str();
-}
 
+int main(int argc, char *argv[]) {
+	//Alert user if invalid usage
+	if (argc != 3) {
+		cout << "Input and/or output files not specified" << endl;
+		cout << "usage: dpgen netlistFile verilogFile" << endl;
+		return -1;
+	}
 
-int typeToWidth(string dataType){
-   if(dataType.compare("Int1") == 0 || dataType.compare("UInt1") == 0 ){
-      return 1;
-   }
-   else if(dataType.compare("Int2") == 0 || dataType.compare("UInt2") == 0 ){
-      return 2;
-   }
-   else if(dataType.compare("Int8") == 0 || dataType.compare("UInt8") == 0 ){
-      return 8;
-   }
-   else if(dataType.compare("Int16") == 0 || dataType.compare("UInt16") == 0 ){
-      return 16;
-   }
-   else if(dataType.compare("Int32") == 0 || dataType.compare("UInt32") == 0 ){
-      return 32;
-   }
-   else if(dataType.compare("Int64") == 0 || dataType.compare("UInt64") == 0 ){
-      return 64;
-   }
-   else{
-      return -1;
-   }
-}
+	ifstream netlistFile;
+	ofstream verilogFile;
+	string line;
+	verilogFile.open(argv[2]);
+	netlistFile.open(argv[1]);
 
-bool Wires::add(wire* addMe){//returns success=true, fail=false
-   for(int i=0; i<wires.size(); i++){ //loop through existing 'wires' and checks if already declared
-      if (wires.at(i)->getName().compare(addMe->getName())==0){
-         cout << "Error: Redeclaration of Wire, Input, Output, or Register:" << addMe->getName() <<endl;
-         return false;
-      }
-   }
-   wires.push_back(addMe);
-   return true;
-}
-bool Wires::addByLine(const vector<string> &words, int lineNumber){
-   bool error = false;
-   type dataType = typeParser(words.at(0));
-   if(dataType == ERROR){
-      error = true;
-      cout << "Error" <<endl;
-   }
-   int width = typeToWidth(words.at(1));
-   if(width == -1){
-      cout << "Invalid data type:" << words.at(1) << " at line " << lineNumber << "." << endl;
-      return false;
-   }
-   bool sign = typeToSign(words.at(1));
-   for(int i = 2; i <words.size(); i++){ //from the third word on, add a 'wire' for each word until out of words or a comment
-      if(words.at(i).compare(0,2,"//")==0){//ignore anything after '//'
-         break;
-      }
-      wire *tempWire = new wire(words.at(i), width, sign, dataType);
-      error = !this->add(tempWire);
-   }
-   return !error;
-}
-int Wires::size(){
-   return wires.size();
-}
-wire* Wires::at(int i){
-   return wires.at(i);
-}
+	if (!verilogFile.is_open()) {
+		cout << "Could not open " << argv[2] << endl;
+		return -1;
+	}
+	if (!netlistFile.is_open()) {
+		cout << "Could not open " << argv[1] << endl;
+		return -1;
+	}
 
-Wires::Wires(){
-   wire *aWire = new wire();
-   this->add(aWire);
-   return;
-}
+	Wires wires;
+	Datapath datapath;
+	int currentLine = 0;
+	bool error = false;
 
-bool typeToSign(string dataType){
-   if(dataType.compare("Int1")==0  || dataType.compare("Int2")==0 || dataType.compare("Int8") ==0 ||
-      dataType.compare("Int16")==0 || dataType.compare("Int32") ==0){
-      return true;
-   }
-   else if(dataType.compare("UInt1")==0  || dataType.compare("UInt2")==0 || dataType.compare("UInt8") ==0 ||
-           dataType.compare("UInt16")==0 || dataType.compare("UInt32") ==0){
-      return false;
-   }
-   else{
-      return false;
-   }
-}
-type typeParser(string dataType){
-   if(dataType.compare("input") == 0){
-      return INPUT;
-   }
-   else if(dataType.compare("output") == 0){
-      return OUTPUT;
-   }
-   else if(dataType.compare("wire") ==0){
-      return WIRE;
-   }
-   else if(dataType.compare("register") ==0){
-      return REGISTER;
-   }
-   else{
-      return ERROR;
-   }
+	while (!netlistFile.eof()) {
+		if (getline(netlistFile, line) && !error) { //Build data structures while parsing input file
+			currentLine++;
+			vector<string> words = splitLine(line);
+			if (words.size() < 3) { //Blank Line
+									//cout << "blank line" <<endl;
+			}
+			else if (words.at(0).compare(0, 2, "//") == 0) { //Comment Line
+															 //cout << "comment line" <<endl;
+			}
+			else if (words.size()>2 && (words.at(0).compare("input") == 0 || words.at(0).compare("output") == 0 ||
+				words.at(0).compare("wire") == 0 || words.at(0).compare("register") == 0)) { //Line Defining Inputs
+																							 //cout << "declaration line" <<endl;
+				error = !wires.addByLine(words, currentLine);
+			}
+			else if (words.at(1).compare("=") == 0) { //operation line
+													  //cout << "op line: ";
+				error = !datapath.addByLine(words, &wires, currentLine);
+			}
+			verilogFile << "//" << line << endl;
+		}
+	}
+	verilogFile << endl;
+	netlistFile.close();
+	if (1) {
+		cout << endl;
+		verilogFile << "`timescale 1ns / 1ps" << "\n";
+		verilogFile << "//////////////////////////////////////////////////////////////////////////////////" << "\n";
+		verilogFile << "// Engineer:Dennis Hardy,Zi Wang,Zachary Alvarez,Tommy Salanski" << "\n";
+		verilogFile << "// Module: " << argv[1] << "\n";
+		verilogFile << "//////////////////////////////////////////////////////////////////////////////////" << "\n";
+		verilogFile << "\n";
+		verilogFile << "module Circuit (";
+		cout << "module Circuit (";
+		for (int i = 1; i < wires.size(); i++) {
+			if (wires.at(i)->getType() == WIRE) {}
+			else {
+				verilogFile << wires.at(i)->getName() << ", ";
+				cout << wires.at(i)->getName() << ", ";
+			}
+		}
+		verilogFile << "Clk, Rst);" << endl;
+		cout << "input Clk, Rst;" << endl;
+
+		for (int i = 1; i< wires.size(); i++) { //Debugging Print all inputs, outputs, wires, registres //start at 1 because zero is the 'empty wire'
+												//cout << wires.at(i)->getTypeS()<<": "<<wires.at(i)->getName() << ": " << wires.at(i)->getSign() << wires.at(i)->getWidth() << endl;
+			verilogFile << wires.at(i)->printToFile();
+			cout << wires.at(i)->printToFile();
+		}
+		verilogFile << endl;
+		cout << endl;
+		for (int i = 0; i< datapath.size(); i++) { //Debugging print all data path components
+												   //cout << datapath.at(i)->getOpS()<< datapath.at(i)->getWidth() << endl;
+			verilogFile << datapath.at(i)->print();
+			cout << datapath.at(i)->print();
+		}
+		verilogFile << "endmodule" << endl;
+		cout << "endmodule" << endl;
+		verilogFile.close();
+
+		return 0;
+	}
+	else {
+		verilogFile.close();
+		return -1;
+	}
 }
