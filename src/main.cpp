@@ -84,14 +84,31 @@ int main(int argc, char *argv[]){
    netlistFile.close();
    if(1){
       cout << endl;
+      verilogFile << "module Circuit (";
+      cout << "module Circuit (";
+      for(int i = 1; i < wires.size(); i++){
+          if(wires.at(i)->getType() == WIRE){}
+          else {
+              verilogFile << wires.at(i)->getName() << ", ";
+              cout << wires.at(i)->getName() << ", ";
+          }
+      }
+      verilogFile << "Clk, Rst);" << endl;
+      verilogFile << "Clk, Rst);" << endl;
+      cout << "input Clk, Rst;" << endl;
+      cout << "input Clk, Rst;" << endl;
+
       for(int i = 1; i< wires.size(); i++){ //Debugging Print all inputs, outputs, wires, registres //start at 1 because zero is the 'empty wire'
          //cout << wires.at(i)->getTypeS()<<": "<<wires.at(i)->getName() << ": " << wires.at(i)->getSign() << wires.at(i)->getWidth() << endl;
          verilogFile << wires.at(i)->printToFile();
+         cout << wires.at(i)->printToFile();
       }
       verilogFile << endl;
+      cout << endl;
       for(int i = 0; i< datapath.size(); i++){ //Debugging print all data path components
          //cout << datapath.at(i)->getOpS()<< datapath.at(i)->getWidth() << endl;
          verilogFile << datapath.at(i)->print();
+         cout << datapath.at(i)->print();
       }
       
       verilogFile.close();
