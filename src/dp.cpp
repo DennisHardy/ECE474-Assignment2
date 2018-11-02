@@ -234,7 +234,9 @@ string Component::print(){
    stringstream out;
    switch(this->op){
       case REG: 
-         out << "REG";
+         out << this->getOpS();
+         out << " #(.DATAWIDTH(" << this->getWidth() << ")) ";
+         out << this->getOpS() << this->getId() <<"(" << this->inputs.at(0)->getName() << ", Clk, Rst, " << this->outputs.at(0)->getName() << ");" << endl;
          break;
       case COMP:
          out << this->getOpS();
