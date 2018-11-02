@@ -8,4 +8,4 @@ Course: ECE 474A
 
 Description: Converts the behavioral netlist specificaion provided by an input file into a synthesizable Verilog datapath implementation.
 
-Contribution:
+Contribution: I mean it's not perfect Communism or anything, but everybody at least did something.
