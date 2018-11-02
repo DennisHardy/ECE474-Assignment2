@@ -238,8 +238,8 @@ string Component::print(){
          break;
       case COMP:
          out << this->getOpS();
-         out << " #(" << this->getWidth() << ") ";
-         out << this->getOpS() << this->getId() <<"(" << this->inputs.at(0)->getName() << ", " << this->inputs.at(1)->getName() << ", ";
+		 out << " #(.DATAWIDTH(" << this->getWidth() << ")) ";
+		 out << this->getOpS() << this->getId() <<"(" << this->inputs.at(0)->getName() << ", " << this->inputs.at(1)->getName() << ", ";
          out << this->outputs.at(0)->getName() << ", " << this->outputs.at(1)->getName() << ", " << this->outputs.at(2)->getName() << ");" << endl;
          break;
       case ADD: 
@@ -248,7 +248,7 @@ string Component::print(){
       case SHR: 
       case SHL: 
          out << this->getOpS();
-         out << " #(" << this->getWidth() << ") ";
+         out << " #(.DATAWIDTH(" << this->getWidth() << ")) ";
          out << this->getOpS() << this->getId() <<"(" << this->inputs.at(0)->getName() << ", " << this->inputs.at(1)->getName() << ", ";
          out << this->outputs.at(0)->getName() << ");" << endl;
          break;
