@@ -15,6 +15,7 @@ class Component
       operation op;
       vector<wire*> inputs;
       vector<wire*> outputs;
+      bool sign;
       int width;
       int id;
    public:
@@ -23,6 +24,7 @@ class Component
       string getOpS();
       int getWidth();
       int getId();
+      bool isSigned();
       string getInput(int i);
       string getOutputS(int i);
       wire* getOutput(int i);

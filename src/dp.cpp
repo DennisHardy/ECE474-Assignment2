@@ -107,8 +107,8 @@ bool Datapath::add(Component* addMe){
 }
 
 Component::Component( vector<string> inputs, vector<string> outputs, operation op, Wires *available, int id, bool* error){
-   
    bool found;
+   this->sign = false;
    for(int i = 0; i<inputs.size(); i++){//check that inputs provided exist
       found = false;
       for(int j = 0; j<available->size(); j++){
@@ -143,6 +143,7 @@ Component::Component( vector<string> inputs, vector<string> outputs, operation o
             }
             wire* outPtr = available->at(j);
             this->outputs.push_back(outPtr);
+            this->sign |= (outPtr->getSign()=='s');
          }
       }
       if(!found){
@@ -183,6 +184,9 @@ int Component::getWidth(){
 }
 int Component::getId(){
       return this->id;
+}
+bool Component::isSigned(){
+   return this->sign;
 }
 string Component::getOpS(){
    switch(this->op){
@@ -232,6 +236,7 @@ void Component::setOutput(int i, wire* out){
 }
 string Component::print(){
    stringstream out;
+   if(this->isSigned()){ out << "S";};
    switch(this->op){
       case REG: 
          out << this->getOpS();
