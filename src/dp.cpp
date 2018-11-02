@@ -261,8 +261,7 @@ string Component::print(){
          out << this->inputs.at(0)->getName() << ", " << this->outputs.at(0)->getName() << ");" << endl;
          break;
       default:  
-         out << "error" << endl;
-         return out.str();
+         out << "// error" << endl;
          break;
    }
    return out.str();

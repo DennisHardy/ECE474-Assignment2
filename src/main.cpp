@@ -110,7 +110,8 @@ int main(int argc, char *argv[]){
          verilogFile << datapath.at(i)->print();
          cout << datapath.at(i)->print();
       }
-      
+      verilogFile << "endmodule" << endl;
+      cout << "endmodule" << endl;
       verilogFile.close();
       
       return 0;
