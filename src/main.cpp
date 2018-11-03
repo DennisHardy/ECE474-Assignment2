@@ -98,6 +98,8 @@ int main(int argc, char *argv[]) {
 			}
 		}
 		verilogFile << "Clk, Rst);" << endl;
+		cout << "Clk, Rst);" << endl;
+		verilogFile << "input Clk, Rst;" << endl;
 		cout << "input Clk, Rst;" << endl;
 
 		for (int i = 1; i< wires.size(); i++) { //Debugging Print all inputs, outputs, wires, registres //start at 1 because zero is the 'empty wire'
