@@ -258,7 +258,7 @@ string Component::print(){
          out << this->outputs.at(0)->getName() << ");" << endl;
          break;
       case MUX: 
-		  out << "MUX2x1 ";
+		  out << "MUX2x1";
 		  out << " #(.DATAWIDTH(" << this->getWidth() << ")) ";
 		  out << this->getOpS() << this->getId() << "(" << this->inputs.at(1)->getName() << ", " << this->inputs.at(2)->getName() << ", " << this->inputs.at(0)->getName() << ", ";
 		  out << this->outputs.at(0)->getName() << ");" << endl;
