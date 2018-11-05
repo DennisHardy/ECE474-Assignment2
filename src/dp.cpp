@@ -235,11 +235,16 @@ string Component::print(){
    switch(this->op){
       case REG: 
          out << "REG";//    REG #(.DATAWIDTH(16)) REG1 (xwire, Clk, Rst, x);
-		 out << " #(.DATAWIDTH(" << this->getWidth() << ")) ";
-		 out << this->getOpS() << this->getId() << "(" << this->inputs.at(0)->getName();
-		 out << ", Clk, Rst, " << this->outputs.at(0)->getName() << ");" << endl;
-
-
+	 out << " #(.DATAWIDTH(" << this->getWidth() << ")) ";
+	 out << this->getOpS() << this->getId() << "(";
+	 if(inputs.at(0)->getWidth() < this->getWidth() && inputs.at(0)->getSign() == 's'){out << "{ ";
+	    out << (this->getWidth() - inputs.at(0)->getWidth()) << "{";
+	    out << this->inputs.at(0)->getName() << "[" << inputs.at(0)->getWidth() - 1;
+	    out << "]}, ";
+	 }
+	 out << this->inputs.at(0)->getName();
+	 if(inputs.at(0)->getWidth() < this->getWidth() && inputs.at(0)->getSign() == 's'){out << "}";}
+	 out << ", Clk, Rst, " << this->outputs.at(0)->getName() << ");" << endl;
          break;
       case COMP:
          out << this->getOpS();
