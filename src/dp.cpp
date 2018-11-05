@@ -254,7 +254,25 @@ string Component::print(){
       case SHL: 
          out << this->getOpS();
          out << " #(.DATAWIDTH(" << this->getWidth() << ")) ";
-         out << this->getOpS() << this->getId() <<"(" << this->inputs.at(0)->getName() << ", " << this->inputs.at(1)->getName() << ", ";
+         out << this->getOpS() << this->getId() <<"(";
+         if(inputs.at(0)->getWidth() < this->getWidth() && inputs.at(0)->getSign() == 's'){out << "{ ";
+            out << (this->getWidth() - inputs.at(0)->getWidth()) << "{";
+            out << this->inputs.at(0)->getName() << "[" << inputs.at(0)->getWidth() - 1;
+            out << "]}, ";
+         }
+         out << this->inputs.at(0)->getName();
+         if(inputs.at(0)->getWidth() < this->getWidth() && inputs.at(0)->getSign() == 's'){out << "}";}
+         out << ", ";
+
+         if(inputs.at(1)->getWidth() < this->getWidth() && inputs.at(1)->getSign() == 's'){out << "{ ";
+            out << (this->getWidth() - inputs.at(1)->getWidth()) << "{";
+            out << this->inputs.at(1)->getName() << "[" << inputs.at(1)->getWidth() - 1;
+            out << "]}, ";
+         }
+         out << this->inputs.at(1)->getName();
+         if(inputs.at(1)->getWidth() < this->getWidth() && inputs.at(1)->getSign() == 's'){out << "}";}
+         out << ", ";
+
          out << this->outputs.at(0)->getName() << ");" << endl;
          break;
       case MUX: 
