@@ -109,6 +109,7 @@ bool Datapath::add(Component* addMe){
 Component::Component( vector<string> inputs, vector<string> outputs, operation op, Wires *available, int id, bool* error){
    
    bool found;
+   this->sign = false;
    for(int i = 0; i<inputs.size(); i++){//check that inputs provided exist
       found = false;
       for(int j = 0; j<available->size(); j++){
@@ -143,6 +144,7 @@ Component::Component( vector<string> inputs, vector<string> outputs, operation o
             }
             wire* outPtr = available->at(j);
             this->outputs.push_back(outPtr);
+	    this->sign |= (outPtr->getSign()=='s');
          }
       }
       if(!found){
@@ -183,6 +185,9 @@ int Component::getWidth(){
 }
 int Component::getId(){
       return this->id;
+}
+bool Component::isSigned(){
+      return this->sign;
 }
 string Component::getOpS(){
    switch(this->op){
@@ -234,6 +239,7 @@ string Component::print(){
    stringstream out;
    switch(this->op){
       case REG: 
+	 if(this->isSigned()){out<<"S";}
          out << "REG";//    REG #(.DATAWIDTH(16)) REG1 (xwire, Clk, Rst, x);
 	 out << " #(.DATAWIDTH(" << this->getWidth() << ")) ";
 	 out << this->getOpS() << this->getId() << "(";
@@ -247,6 +253,7 @@ string Component::print(){
 	 out << ", Clk, Rst, " << this->outputs.at(0)->getName() << ");" << endl;
          break;
       case COMP:
+	 if(this->isSigned()){out<<"S";}
          out << this->getOpS();
 	 out << " #(.DATAWIDTH(" << this->getWidth() << ")) ";
 	 out << this->getOpS() << this->getId() <<"(";
@@ -277,6 +284,7 @@ string Component::print(){
       case MUL: 
       case SHR: 
       case SHL: 
+	 if(this->isSigned()){out<<"S";}
          out << this->getOpS();
          out << " #(.DATAWIDTH(" << this->getWidth() << ")) ";
          out << this->getOpS() << this->getId() <<"(";
@@ -301,6 +309,7 @@ string Component::print(){
          out << this->outputs.at(0)->getName() << ");" << endl;
          break;
       case MUX: 
+	 	  if(this->isSigned()){out<<"S";}
 		  out << "MUX2x1";
 		  out << " #(.DATAWIDTH(" << this->getWidth() << ")) ";
 		  out << this->getOpS() << this->getId() << "(";
