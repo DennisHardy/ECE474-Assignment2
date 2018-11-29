@@ -254,7 +254,7 @@ string Component::print() {
 		out << ", Clk, Rst, " << this->outputs.at(0)->getName() << ");" << endl;
 		break;
 	case COMP:
-		if (this->isSigned()) { out << ""; }
+		if (this->isSigned()) { out << "S"; }
 		out << this->getOpS();
 		out << " #(.DATAWIDTH(" << this->getWidth() << ")) ";
 		out << this->getOpS() << this->getId() << "(";
@@ -285,7 +285,7 @@ string Component::print() {
 	case ADD:
 	case SUB:
 	case MUL:
-		if (this->isSigned()) { out << ""; }
+		if (this->isSigned()) { out << "S"; }
 		out << this->getOpS();
 		out << " #(.DATAWIDTH(" << this->getWidth() << ")) ";
 		out << this->getOpS() << this->getId() << "(";
@@ -313,7 +313,7 @@ string Component::print() {
 		break;
 	case SHR:
 	case SHL:
-		if (this->isSigned()) { out << ""; }
+		if (this->isSigned()) { out << "S"; }
 		out << this->getOpS();
 		out << " #(.DATAWIDTH(" << this->getWidth() << ")) ";
 		out << this->getOpS() << this->getId() << "(";
@@ -341,7 +341,7 @@ string Component::print() {
 		out << this->outputs.at(0)->getName() << ");" << endl;
 		break;
 	case MUX:
-		if (this->isSigned()) { out << ""; }
+		if (this->isSigned()) { out << "S"; }
 		out << "MUX2x1";
 		out << " #(.DATAWIDTH(" << this->getWidth() << ")) ";
 		out << this->getOpS() << this->getId() << "(";
