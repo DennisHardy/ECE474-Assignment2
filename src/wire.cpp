@@ -39,7 +39,7 @@ string wire::getTypeS() {
 	case INPUT: return "input";
 	case OUTPUT: return "output";
 	case WIRE: return "wire";
-	case REGISTER: return "register";
+	case REGISTER: return "reg";
 	default: return "error:";
 	}
 }
