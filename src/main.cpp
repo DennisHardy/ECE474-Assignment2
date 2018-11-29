@@ -91,7 +91,7 @@ int main(int argc, char *argv[]) {
 		verilogFile << "module Circuit (";
 		cout << "module Circuit (";
 		for (int i = 1; i < wires.size(); i++) {
-			if (wires.at(i)->getType() == WIRE) {}
+			if (wires.at(i)->getType() == WIRE || wires.at(i)->getType() == REGISTER) {}
 			else {
 				verilogFile << wires.at(i)->getName() << ", ";
 				cout << wires.at(i)->getName() << ", ";
