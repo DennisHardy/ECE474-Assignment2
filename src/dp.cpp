@@ -85,7 +85,7 @@ bool Datapath::add(Component* addMe) {
 		for (int i = 0; i < this->components.size(); i++) {
 			if ((this->components.at(i)->getInput(1).compare(addMe->getInput(1)) == 0) &&
 				(this->components.at(i)->getInput(2).compare(addMe->getInput(2)) == 0)) {
-				cout << "Two comparators with same inputs FIXME:combine";
+				//cout << "Two comparators with same inputs FIXME:combine";
 				if ((this->components.at(i)->getOutputS(0).compare("") == 0) &&
 					(addMe->getOutputS(0).compare("") != 0)) {
 					this->components.at(i)->setOutput(0, addMe->getOutput(0));
