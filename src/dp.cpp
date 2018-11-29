@@ -1,163 +1,409 @@
-#include <stdio.h>
-#include "wire.h"
-#include <string>
-#include <iostream>
+#include "dp.h"
 
-using namespace std;
-
-wire::wire(string name, int width, bool sign, type myType) {
-	this->name = name;
-	this->width = width;
-	this->sign = sign;
-	this->myType = myType;
+Datapath::Datapath() {
+	return;
 }
-wire::wire() {
-	this->name = "";
-	this->width = 0;
+
+bool Datapath::addByLine(vector<string> words, Wires* available, int currentLine) {
+	bool error = false;
+	vector<string> inputs;
+	vector<string> outputs;
+	operation op;
+
+	if (words.size() == 3) {
+		op = REG;
+	}
+	else {
+		op = parseOp(words.at(3));
+		if (op == ERROR_OP) {
+			cout << "Invalid oporator: " << words.at(3) << " at line:" << currentLine << endl;
+			error = true;
+		}
+		else if (op == MUX) {
+			if (words.at(5).compare(":") != 0) {
+				cout << "Invalid oporator: " << words.at(5) << " at line:" << currentLine << endl;
+				op = ERROR_OP;
+				error = true;
+			}
+		}
+	}
+	switch (op) {
+	case REG:
+		outputs.push_back(words.at(0));
+		inputs.push_back(words.at(2));
+		break;
+	case COMP:
+		inputs.push_back(words.at(2));
+		inputs.push_back(words.at(4));
+		outputs.resize(3);
+		if (words.at(3).compare(">") == 0) {
+			outputs.at(0) = words.at(0);
+		}
+		else if (words.at(3).compare("<") == 0) {
+			outputs.at(1) = words.at(0);
+		}
+		else if (words.at(3).compare("==") == 0) {
+			outputs.at(2) = words.at(0);
+		}
+		break;
+	case ADD:
+	case SUB:
+	case MUL:
+	case SHR:
+	case SHL:
+		outputs.push_back(words.at(0));
+		inputs.push_back(words.at(2));
+		inputs.push_back(words.at(4));
+		break;
+
+	case MUX:
+		outputs.push_back(words.at(0));
+		inputs.push_back(words.at(2));
+		inputs.push_back(words.at(4));
+		inputs.push_back(words.at(6));
+		break;
+
+	default:
+		error = true;
+		break;
+	}
+	if (!error) {
+		Component *tempComponent = new Component(inputs, outputs, op, available, this->components.size(), &error);
+		this->add(tempComponent);
+	}
+	return !error;
+}
+
+int Datapath::size() {
+	return this->components.size();
+}
+Component* Datapath::at(int i) {
+	return this->components.at(i);
+}
+bool Datapath::add(Component* addMe) {
+	if (addMe->getOp() == COMP) {
+		for (int i = 0; i < this->components.size(); i++) {
+			if ((this->components.at(i)->getInput(1).compare(addMe->getInput(1)) == 0) &&
+				(this->components.at(i)->getInput(2).compare(addMe->getInput(2)) == 0)) {
+				cout << "Two comparators with same inputs FIXME:combine";
+				if ((this->components.at(i)->getOutputS(0).compare("") == 0) &&
+					(addMe->getOutputS(0).compare("") != 0)) {
+					this->components.at(i)->setOutput(0, addMe->getOutput(0));
+				}
+				if ((this->components.at(i)->getOutputS(1).compare("") == 0) &&
+					(addMe->getOutputS(1).compare("") != 0)) {
+					this->components.at(i)->setOutput(1, addMe->getOutput(1));
+				}
+				if ((this->components.at(i)->getOutputS(2).compare("") == 0) &&
+					(addMe->getOutputS(2).compare("") != 0)) {
+					this->components.at(i)->setOutput(2, addMe->getOutput(2));
+				}
+				return true;
+			}
+		}
+	}
+	this->components.push_back(addMe);
+	return true;
+}
+
+Component::Component(vector<string> inputs, vector<string> outputs, operation op, Wires *available, int id, bool* error) {
+
+	bool found;
 	this->sign = false;
-	this->myType = WIRE;
+	for (int i = 0; i<inputs.size(); i++) {//check that inputs provided exist
+		found = false;
+		for (int j = 0; j<available->size(); j++) {
+			if (inputs.at(i).compare(available->at(j)->getName()) == 0) {
+				found = true;
+				if (available->at(j)->getType() == OUTPUT) { //can't use output as input
+					cout << "Output: " << available->at(j)->getName() << " used as input." << endl;
+					*error = true;
+					found = false;
+					break;
+				}
+				wire* inPtr = available->at(j);
+				this->inputs.push_back(inPtr);
+			}
+		}
+		if (!found) {
+			cout << "Input: " << inputs.at(i) << " not declared" << endl;
+			*error = true;
+			break;
+		}
+	}
+	for (int i = 0; i<outputs.size(); i++) {//check that outputs provided exist
+		found = false;
+		for (int j = 0; j<available->size(); j++) {
+			if (outputs.at(i).compare(available->at(j)->getName()) == 0) {
+				found = true;
+				if (available->at(j)->getType() == INPUT) { //can't use input as output
+					cout << "Input: " << available->at(j)->getName() << " used as output." << endl;
+					*error = true;
+					found = false;
+					break;
+				}
+				wire* outPtr = available->at(j);
+				this->outputs.push_back(outPtr);
+				this->sign |= (outPtr->getSign() == 's');
+			}
+		}
+		if (!found) {
+			cout << "Output: " << outputs.at(i) << " not declared" << endl;
+			*error = true;
+			break;
+		}
+	}
+	if (!found) {
+		return;
+	}
+	this->op = op;
+	this->id = id;
+	//determine width of datapath component
+	this->width = 0;
+	if (op == COMP) {
+		for (int i = 0; i< this->inputs.size(); i++) {
+			if (this->inputs.at(i)->getWidth() > this->width) {
+				this->width = this->inputs.at(i)->getWidth();
+			}
+		}
+	}
+	else {
+		for (int i = 0; i< this->outputs.size(); i++) {
+			if (this->outputs.at(i)->getWidth() > this->width) {
+				this->width = this->outputs.at(i)->getWidth();
+			}
+		}
+	}
+	return;
 }
-string wire::getName() {
-	return this->name;
+
+operation Component::getOp() {
+	return this->op;
 }
-int wire::getWidth() {
+int Component::getWidth() {
 	return this->width;
 }
-char wire::getSign() {
-	if (this->sign) {
-		return 's';
+int Component::getId() {
+	return this->id;
+}
+bool Component::isSigned() {
+	return this->sign;
+}
+string Component::getOpS() {
+	switch (this->op) {
+	case REG: return "REG";
+	case ADD: return "ADD";
+	case SUB: return "SUB";
+	case MUL: return "MUL";
+	case COMP:return "COMP";
+	case SHR: return "SHR";
+	case SHL: return "SHL";
+	case MUX: return "MUX";
+	default:  return "error";
+	}
+}
+
+string Component::getInput(int i) {
+	if (i >= this->inputs.size() || i < 0) {
+		return "error";
 	}
 	else {
-		return 'u';
+		return this->inputs.at(i)->getName();
 	}
 }
-type wire::getType() {
-	return myType;
-}
-string wire::getTypeS() {
-	switch (this->myType) {
-	case INPUT: return "input";
-	case OUTPUT: return "output";
-	case WIRE: return "wire";
-	case REGISTER: return "register";
-	default: return "error:";
+string Component::getOutputS(int i) {
+	if (i >= this->outputs.size() || i < 0) {
+		return "error";
+	}
+	else {
+		return this->outputs.at(i)->getName();
 	}
 }
-string wire::printToFile() {
+wire* Component::getOutput(int i) {
+	if (i >= this->outputs.size() || i < 0) {
+		return nullptr;
+	}
+	else {
+		return this->outputs.at(i);
+	}
+}
+void Component::setOutput(int i, wire* out) {
+	if (i >= this->outputs.size() || i < 0) {
+		return;
+	}
+	else {
+		this->outputs.at(i) = out;
+	}
+}
+string Component::print() {
 	stringstream out;
-	out << this->getTypeS();
-	if (this->getType() != OUTPUT) {
-		out << " reg";
-	}
-	if (this->getSign() == 's') {
-		out << " signed";
-	}
-	if (this->getWidth() == 1) {
-		out << " " << this->getName() << ";" << endl;
-	}
-	else {
-		out << " [" << this->getWidth() - 1 << ":0] " << this->getName() << ";" << endl;
+	switch (this->op) {
+	case REG:
+		if (this->isSigned()) { out << ""; }
+		out << "REG";//    REG #(.DATAWIDTH(16)) REG1 (xwire, Clk, Rst, x);
+		out << " #(.DATAWIDTH(" << this->getWidth() << ")) ";
+		out << this->getOpS() << this->getId() << "(";
+		if (inputs.at(0)->getWidth() < this->getWidth() && inputs.at(0)->getSign() == 's') {
+			out << "{ ";
+			out << (this->getWidth() - inputs.at(0)->getWidth()) << "{";
+			out << this->inputs.at(0)->getName() << "[" << inputs.at(0)->getWidth() - 1;
+			out << "]}, ";
+		}
+		out << this->inputs.at(0)->getName();
+		if (inputs.at(0)->getWidth() < this->getWidth() && inputs.at(0)->getSign() == 's') { out << "}"; }
+		out << ", Clk, Rst, " << this->outputs.at(0)->getName() << ");" << endl;
+		break;
+	case COMP:
+		if (this->isSigned()) { out << ""; }
+		out << this->getOpS();
+		out << " #(.DATAWIDTH(" << this->getWidth() << ")) ";
+		out << this->getOpS() << this->getId() << "(";
+		if (inputs.at(0)->getWidth() < this->getWidth() && inputs.at(0)->getSign() == 's') {
+			out << "{ ";
+			out << (this->getWidth() - inputs.at(0)->getWidth()) << "{";
+			out << this->inputs.at(0)->getName() << "[" << inputs.at(0)->getWidth() - 1;
+			out << "]}, ";
+		}
+		out << this->inputs.at(0)->getName();
+		if (inputs.at(0)->getWidth() < this->getWidth() && inputs.at(0)->getSign() == 's') { out << "}"; }
+		out << ", ";
+
+		if (inputs.at(1)->getWidth() < this->getWidth() && inputs.at(1)->getSign() == 's') {
+			out << "{ ";
+			out << (this->getWidth() - inputs.at(1)->getWidth()) << "{";
+			out << this->inputs.at(1)->getName() << "[" << inputs.at(1)->getWidth() - 1;
+			out << "]}, ";
+		}
+		out << this->inputs.at(1)->getName();
+		if (inputs.at(1)->getWidth() < this->getWidth() && inputs.at(1)->getSign() == 's') { out << "}"; }
+		out << ", ";
+
+		out << this->outputs.at(0)->getName() << ", ";
+		out << this->outputs.at(1)->getName() << ", ";
+		out << this->outputs.at(2)->getName() << ");" << endl;
+		break;
+	case ADD:
+	case SUB:
+	case MUL:
+		if (this->isSigned()) { out << ""; }
+		out << this->getOpS();
+		out << " #(.DATAWIDTH(" << this->getWidth() << ")) ";
+		out << this->getOpS() << this->getId() << "(";
+		if (inputs.at(0)->getWidth() < this->getWidth() && inputs.at(0)->getSign() == 's') {
+			out << "{{";
+			out << (this->getWidth() - inputs.at(0)->getWidth()) << "{";
+			out << this->inputs.at(0)->getName() << "[" << inputs.at(0)->getWidth() - 1;
+			out << "]}}, ";
+		}
+		out << this->inputs.at(0)->getName();
+		if (inputs.at(0)->getWidth() < this->getWidth() && inputs.at(0)->getSign() == 's') { out << "}"; }
+		out << ", ";
+
+		if (inputs.at(1)->getWidth() < this->getWidth() && inputs.at(1)->getSign() == 's') {
+			out << "{{ ";
+			out << (this->getWidth() - inputs.at(1)->getWidth()) << "{";
+			out << this->inputs.at(1)->getName() << "[" << inputs.at(1)->getWidth() - 1;
+			out << "]}}, ";
+		}
+		out << this->inputs.at(1)->getName();
+		if (inputs.at(1)->getWidth() < this->getWidth() && inputs.at(1)->getSign() == 's') { out << "}"; }
+		out << ", ";
+
+		out << this->outputs.at(0)->getName() << ");" << endl;
+		break;
+	case SHR:
+	case SHL:
+		if (this->isSigned()) { out << ""; }
+		out << this->getOpS();
+		out << " #(.DATAWIDTH(" << this->getWidth() << ")) ";
+		out << this->getOpS() << this->getId() << "(";
+		if (inputs.at(0)->getWidth() < this->getWidth() && inputs.at(0)->getSign() == 's') {
+			out << "{{";
+			out << (this->getWidth() - inputs.at(0)->getWidth()) << "{";
+			out << this->inputs.at(0)->getName() << "[" << inputs.at(0)->getWidth() - 1;
+			out << "]}}, ";
+		}
+		out << this->inputs.at(0)->getName();
+		if (inputs.at(0)->getWidth() < this->getWidth() && inputs.at(0)->getSign() == 's') { out << "}"; }
+		out << ", ";
+
+		if (inputs.at(1)->getWidth() < this->getWidth() && inputs.at(1)->getSign() == 's') {
+			//out << "{{ ";
+			out << "{";
+			out << (this->getWidth() - inputs.at(1)->getWidth()) << "'b0, ";
+			//out << this->inputs.at(1)->getName() << "[" << inputs.at(1)->getWidth() - 1;
+			//out << "]}}, ";
+		}
+		out << this->inputs.at(1)->getName();
+		if (inputs.at(1)->getWidth() < this->getWidth() && inputs.at(1)->getSign() == 's') { out << "}"; }
+		out << ", ";
+
+		out << this->outputs.at(0)->getName() << ");" << endl;
+		break;
+	case MUX:
+		if (this->isSigned()) { out << ""; }
+		out << "MUX2x1";
+		out << " #(.DATAWIDTH(" << this->getWidth() << ")) ";
+		out << this->getOpS() << this->getId() << "(";
+		if (inputs.at(1)->getWidth() < this->getWidth() && inputs.at(1)->getSign() == 's') {
+			out << "{ ";
+			out << (this->getWidth() - inputs.at(1)->getWidth()) << "{";
+			out << this->inputs.at(1)->getName() << "[" << inputs.at(1)->getWidth() - 1;
+			out << "]}, ";
+		}
+		out << this->inputs.at(1)->getName();
+		if (inputs.at(1)->getWidth() < this->getWidth() && inputs.at(1)->getSign() == 's') { out << "}"; }
+		out << ", ";
+
+		if (inputs.at(2)->getWidth() < this->getWidth() && inputs.at(2)->getSign() == 's') {
+			out << "{{ ";
+			out << (this->getWidth() - inputs.at(2)->getWidth()) << "{";
+			out << this->inputs.at(2)->getName() << "[" << inputs.at(2)->getWidth() - 1;
+			out << "]}}, ";
+		}
+		out << this->inputs.at(2)->getName();
+		if (inputs.at(2)->getWidth() < this->getWidth() && inputs.at(2)->getSign() == 's') { out << "}"; }
+		out << ", ";
+
+		out << this->inputs.at(0)->getName() << ", ";
+		out << this->outputs.at(0)->getName() << ");" << endl;
+		break;
+	default:
+		out << "error" << endl;
+		break;
 	}
 	return out.str();
 }
 
-
-int typeToWidth(string dataType) {
-	if (dataType.compare("Int1") == 0 || dataType.compare("UInt1") == 0) {
-		return 1;
+operation parseOp(string in) {
+	if (in.compare("+") == 0) {
+		return ADD;
 	}
-	else if (dataType.compare("Int2") == 0 || dataType.compare("UInt2") == 0) {
-		return 2;
+	else if (in.compare("-") == 0) {
+		return SUB;
 	}
-	else if (dataType.compare("Int8") == 0 || dataType.compare("UInt8") == 0) {
-		return 8;
+	else if (in.compare("*") == 0) {
+		return MUL;
 	}
-	else if (dataType.compare("Int16") == 0 || dataType.compare("UInt16") == 0) {
-		return 16;
+	else if (in.compare(">") == 0) {
+		return COMP;
 	}
-	else if (dataType.compare("Int32") == 0 || dataType.compare("UInt32") == 0) {
-		return 32;
+	else if (in.compare("<") == 0) {
+		return COMP;
 	}
-	else if (dataType.compare("Int64") == 0 || dataType.compare("UInt64") == 0) {
-		return 64;
+	else if (in.compare("==") == 0) {
+		return COMP;
 	}
-	else {
-		return -1;
+	else if (in.compare("?") == 0) {
+		return MUX;
 	}
-}
-
-bool Wires::add(wire* addMe) {//returns success=true, fail=false
-	for (int i = 0; i<wires.size(); i++) { //loop through existing 'wires' and checks if already declared
-		if (wires.at(i)->getName().compare(addMe->getName()) == 0) {
-			cout << "Error: Redeclaration of Wire, Input, Output, or Register:" << addMe->getName() << endl;
-			return false;
-		}
+	else if (in.compare(">>") == 0) {
+		return SHR;
 	}
-	wires.push_back(addMe);
-	return true;
-}
-bool Wires::addByLine(const vector<string> &words, int lineNumber) {
-	bool error = false;
-	type dataType = typeParser(words.at(0));
-	if (dataType == ERROR) {
-		error = true;
-		cout << "Error" << endl;
-	}
-	int width = typeToWidth(words.at(1));
-	if (width == -1) {
-		cout << "Invalid data type:" << words.at(1) << " at line " << lineNumber << "." << endl;
-		return false;
-	}
-	bool sign = typeToSign(words.at(1));
-	for (int i = 2; i <words.size(); i++) { //from the third word on, add a 'wire' for each word until out of words or a comment
-		if (words.at(i).compare(0, 2, "//") == 0) {//ignore anything after '//'
-			break;
-		}
-		wire *tempWire = new wire(words.at(i), width, sign, dataType);
-		error = !this->add(tempWire);
-	}
-	return !error;
-}
-int Wires::size() {
-	return wires.size();
-}
-wire* Wires::at(int i) {
-	return wires.at(i);
-}
-
-Wires::Wires() {
-	wire *aWire = new wire();
-	this->add(aWire);
-	return;
-}
-
-bool typeToSign(string dataType) {
-	if (dataType.compare("Int1") == 0 || dataType.compare("Int2") == 0 || dataType.compare("Int8") == 0 ||
-		dataType.compare("Int16") == 0 || dataType.compare("Int32") == 0) {
-		return true;
-	}
-	else if (dataType.compare("UInt1") == 0 || dataType.compare("UInt2") == 0 || dataType.compare("UInt8") == 0 ||
-		dataType.compare("UInt16") == 0 || dataType.compare("UInt32") == 0) {
-		return false;
+	else if (in.compare("<<") == 0) {
+		return SHL;
 	}
 	else {
-		return false;
-	}
-}
-type typeParser(string dataType) {
-	if (dataType.compare("input") == 0) {
-		return INPUT;
-	}
-	else if (dataType.compare("output") == 0) {
-		return OUTPUT;
-	}
-	else if (dataType.compare("wire") == 0) {
-		return WIRE;
-	}
-	else if (dataType.compare("register") == 0) {
-		return REGISTER;
-	}
-	else {
-		return ERROR;
+		return ERROR_OP;
 	}
 }
