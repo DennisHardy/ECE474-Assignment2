@@ -239,7 +239,7 @@ string Component::print() {
 	stringstream out;
 	switch (this->op) {
 	case REG:
-		if (this->isSigned()) { out << "S"; }
+		if (this->isSigned()) { out << ""; }
 		out << "REG";//    REG #(.DATAWIDTH(16)) REG1 (xwire, Clk, Rst, x);
 		out << " #(.DATAWIDTH(" << this->getWidth() << ")) ";
 		out << this->getOpS() << this->getId() << "(";
@@ -341,7 +341,7 @@ string Component::print() {
 		out << this->outputs.at(0)->getName() << ");" << endl;
 		break;
 	case MUX:
-		if (this->isSigned()) { out << "S"; }
+		if (this->isSigned()) { out << ""; }
 		out << "MUX2x1";
 		out << " #(.DATAWIDTH(" << this->getWidth() << ")) ";
 		out << this->getOpS() << this->getId() << "(";
